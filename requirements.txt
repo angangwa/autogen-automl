@@ -1,0 +1,11 @@
+autogen-core
+autogen-agentchat
+autogen-ext[anthropic,openai,docker]
+anthropic
+streamlit
+python-dotenv
+typing-extensions
+pandas
+matplotlib
+plotly
+kaleido

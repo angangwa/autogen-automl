@@ -1,0 +1,49 @@
+"""
+Configuration settings for the AutoGen EDA application.
+Loads settings from environment variables with sensible defaults.
+"""
+
+import os
+import logging
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Base directories
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+SRC_DIR = BASE_DIR / "src"
+
+# API Keys
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+if not ANTHROPIC_API_KEY:
+    logging.warning("ANTHROPIC_API_KEY not set in environment variables.")
+
+# Paths
+DATA_DIR = os.getenv("DATA_DIR", str(BASE_DIR / "data"))
+OUTPUTS_DIR = os.getenv("OUTPUTS_DIR", str(BASE_DIR / "outputs"))
+
+# Ensure directories exist
+Path(DATA_DIR).mkdir(exist_ok=True)
+Path(OUTPUTS_DIR).mkdir(exist_ok=True)
+
+# Docker Settings
+DOCKER_IMAGE = os.getenv("DOCKER_IMAGE", "python:3.11")
+DOCKER_INIT_PACKAGES = os.getenv(
+    "DOCKER_INIT_PACKAGES", 
+    "pandas numpy scikit-learn matplotlib seaborn plotly kaleido"
+).split()
+
+# Model Settings
+AI_MODEL = os.getenv("AI_MODEL", "claude-3-7-sonnet-20250219")
+
+# Application Settings
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
