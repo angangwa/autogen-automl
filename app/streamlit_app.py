@@ -23,7 +23,8 @@ from src.config import settings
 from src import run_analysis
 from src.utils.helpers import (
     get_output_files, read_file_content, 
-    get_run_history, get_run_details, load_run_to_current
+    get_run_history, get_run_details, load_run_to_current,
+    get_available_examples, load_example_to_current
 )
 
 # Set page config
@@ -40,13 +41,15 @@ if "analysis_completed" not in st.session_state:
 if "run_id" not in st.session_state:
     st.session_state.run_id = None
 if "current_view" not in st.session_state:
-    st.session_state.current_view = "main"  # Options: main, history, viewer
+    st.session_state.current_view = "main"  # Options: main, history, viewer, examples
 if "selected_run" not in st.session_state:
     st.session_state.selected_run = None
 if "selected_file" not in st.session_state:
     st.session_state.selected_file = None
 if "file_category" not in st.session_state:
     st.session_state.file_category = None
+if "loaded_example" not in st.session_state:
+    st.session_state.loaded_example = None
 
 # Define functions
 def generate_html_preview(file_path: str) -> str:
@@ -146,20 +149,131 @@ def display_file_viewer(directory, file_category, file_name):
             with st.expander("Preview as Image"):
                 st.image(str(img_file))
 
+def set_loaded_example(example):
+    """Set the loaded example and copy its data to the data directory."""
+    if load_example_to_current(example):
+        st.session_state.loaded_example = example
+        # Pre-fill the intent text
+        if "user_intent" in example:
+            st.session_state.user_intent = example["user_intent"]
+        # Update advanced settings if present in the example
+        if "interactive" in example:
+            st.session_state.interactive = example["interactive"]
+        if "docker_wait_time" in example:
+            st.session_state.docker_wait_time = example["docker_wait_time"]
+        if "max_turns" in example:
+            st.session_state.max_turns = example["max_turns"]
+        return True
+    return False
+
 # Main App Structure
 def main():
     # Define app title and description
     st.title("📊 AutoGen EDA: AI-Powered Data Analysis")
     
-    # If we're in history view
+    # Choose the view based on session state
     if st.session_state.current_view == "history":
         display_history_view()
-    # If we're in file viewer mode
     elif st.session_state.current_view == "viewer":
         display_file_viewer_page()
-    # Main view (default)
+    elif st.session_state.current_view == "examples":
+        display_examples_view()
     else:
         display_main_view()
+
+# Examples View
+def display_examples_view():
+    st.markdown("""
+    ## Examples
+    Browse and load example datasets with pre-configured analysis intents.
+    """)
+    
+    # Add back button
+    if st.button("← Back to Main", key="back_from_examples"):
+        change_view("main")
+        st.rerun()
+    
+    # Get available examples
+    examples = get_available_examples()
+    
+    if not examples:
+        st.info("No examples found.")
+        return
+    
+    st.write(f"Found {len(examples)} examples")
+    
+    # Display examples in a table
+    example_data = []
+    for i, example in enumerate(examples):
+        data_path = example.get("data", "")
+        if isinstance(data_path, str) and Path(data_path).is_file():
+            data_type = "File"
+        else:
+            data_type = "Directory"
+        
+        example_data.append({
+            "ID": i,
+            "Name": example.get("name", f"Example {i}"),
+            "Data Type": data_type,
+            "Data Path": data_path,
+            "Intent": example.get("user_intent", "No intent specified")[:50] + "..." if len(example.get("user_intent", "")) > 50 else example.get("user_intent", "No intent specified")
+        })
+    
+    df = pd.DataFrame(example_data)
+    
+    # Use Streamlit's data editor for better UX
+    selection = st.data_editor(
+        df,
+        hide_index=True,
+        column_config={
+            "ID": st.column_config.NumberColumn("ID"),
+            "Name": st.column_config.TextColumn("Name"),
+            "Data Type": st.column_config.TextColumn("Data Type"),
+            "Data Path": st.column_config.TextColumn("Data Path"),
+            "Intent": st.column_config.TextColumn("Intent"),
+        },
+        use_container_width=True,
+        disabled=True,
+    )
+    
+    # Allow selection of an example
+    selected_example_index = st.selectbox(
+        "Select an example to load:",
+        options=list(range(len(example_data))),
+        format_func=lambda i: f"{example_data[i]['Name']}"
+    )
+    
+    # Show more details about the selected example
+    st.subheader("Example Details")
+    selected_example = examples[selected_example_index]
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Name:**", selected_example.get("name", "Unnamed"))
+        st.write("**Data Path:**", selected_example.get("data", "Not specified"))
+        
+        # Display other settings if available
+        if "interactive" in selected_example:
+            st.write("**Interactive Mode:**", "Yes" if selected_example["interactive"] else "No")
+        if "docker_wait_time" in selected_example:
+            st.write("**Docker Wait Time:**", f"{selected_example['docker_wait_time']} seconds")
+        if "max_turns" in selected_example:
+            st.write("**Max Turns:**", selected_example["max_turns"])
+    
+    with col2:
+        st.write("**User Intent:**")
+        st.info(selected_example.get("user_intent", "No intent specified"))
+    
+    # Add a load button
+    if st.button("Load Selected Example", key="load_example"):
+        if set_loaded_example(selected_example):
+            # Return to main view
+            change_view("main")
+            st.success(f"Loaded example: {selected_example.get('name', 'Unnamed')}")
+            st.rerun()
+        else:
+            st.error(f"Failed to load example: {selected_example.get('name', 'Unnamed')}")
 
 # History View
 def display_history_view():
@@ -262,13 +376,28 @@ def display_main_view():
     with st.sidebar:
         st.header("Settings & Data Upload")
         
-        # Link to view run history
-        if st.button("View Previous Runs"):
-            change_view("history")
-            st.rerun()
+        # Navigation buttons
+        col1, col2 = st.columns(2)
         
-        # Show currently loaded run if any
-        if st.session_state.selected_run:
+        with col1:
+            if st.button("Examples", use_container_width=True):
+                change_view("examples")
+                st.rerun()
+                
+        with col2:
+            if st.button("Previous Runs", use_container_width=True):
+                change_view("history")
+                st.rerun()
+        
+        # Show currently loaded content (example or run)
+        if st.session_state.loaded_example:
+            example_name = st.session_state.loaded_example.get("name", "Unnamed Example")
+            st.info(f"Using example: {example_name}")
+            if st.button("Clear Loaded Example"):
+                st.session_state.loaded_example = None
+                st.session_state.user_intent = ""
+                st.rerun()
+        elif st.session_state.selected_run:
             st.info(f"Using data from run: {st.session_state.selected_run}")
             if st.button("Clear Loaded Run"):
                 st.session_state.selected_run = None
@@ -293,32 +422,51 @@ def display_main_view():
                 
                 st.success(f"Saved {uploaded_file.name} to data directory.")
         
+        # Show current data files
+        data_files = os.listdir(settings.DATA_DIR)
+        if data_files:
+            with st.expander("Current Data Files"):
+                for file in data_files:
+                    file_path = Path(settings.DATA_DIR) / file
+                    if file_path.is_file():
+                        st.text(f"📄 {file}")
+                    elif file_path.is_dir():
+                        st.text(f"📁 {file}")
+        
         # Advanced settings
         st.subheader("Advanced Settings")
+        
+        # Use session state or default values for settings
+        max_turns_value = st.session_state.get("max_turns", 20)
+        interactive_value = st.session_state.get("interactive", True)
+        docker_wait_time_value = st.session_state.get("docker_wait_time", 30)
         
         max_turns = st.slider(
             "Maximum Conversation Turns before asking the agent to wrap up",
             min_value=5,
             max_value=50,
-            value=20,
+            value=max_turns_value,
             step=5,
             help="Maximum number of Conversation Turns before asking the agent to wrap up."
         )
+        st.session_state.max_turns = max_turns
         
         interactive = st.checkbox(
             "Interactive Mode",
-            value=True,
+            value=interactive_value,
             help="Allow the AI to ask questions during analysis."
         )
+        st.session_state.interactive = interactive
         
         docker_wait_time = st.slider(
             "Docker Initialization Time (seconds)",
             min_value=5,
             max_value=30,
-            value=30,
+            value=docker_wait_time_value,
             step=5,
             help="Docker container initialization wait time."
         )
+        st.session_state.docker_wait_time = docker_wait_time
         
         save_history = st.checkbox(
             "Save Run History",
@@ -335,11 +483,17 @@ def display_main_view():
     # Main content area - using full width instead of columns
     # ML intent input
     st.header("Machine Learning Intent")
+    
+    # Use session state or empty string for intent
+    user_intent_value = st.session_state.get("user_intent", "")
+    
     user_intent = st.text_area(
         "Describe what you want to do with your data",
+        value=user_intent_value,
         height=150,
         placeholder="Example: I want to predict customer churn based on their usage patterns and demographics."
     )
+    st.session_state.user_intent = user_intent
     
     # Run analysis button
     run_button = st.button("Run Analysis", type="primary")

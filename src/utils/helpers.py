@@ -292,9 +292,12 @@ def get_available_examples() -> List[Dict[str, Any]]:
                 # Convert relative path to absolute path
                 data_path = example["data"]
                 if not Path(data_path).is_absolute():
+                    # The path in examples.json is already relative to the examples directory
                     example["data_full_path"] = str(base_dir / "examples" / data_path)
                 else:
                     example["data_full_path"] = data_path
+                
+                logger.info(f"Example data path: {example['data']} -> {example['data_full_path']}")
         
         return examples
     except Exception as e:
@@ -329,20 +332,31 @@ def load_example_to_current(example: Dict[str, Any]) -> bool:
             logger.error(f"Example data path not found: {source_path}")
             return False
         
+        logger.info(f"Loading example data from {source_path} to {data_dir}")
+        
         # Copy data from example to data directory
         if source_path.is_file():
             # If source is a file, copy it directly
             shutil.copy2(source_path, data_dir / source_path.name)
+            logger.info(f"Copied file {source_path.name} to data directory")
         elif source_path.is_dir():
-            # If source is a directory, copy all its contents
+            # If source is a directory, we need special handling
             for item in source_path.glob("*"):
+                target = data_dir / item.name
                 if item.is_file():
-                    shutil.copy2(item, data_dir / item.name)
+                    shutil.copy2(item, target)
+                    logger.info(f"Copied file {item.name} to data directory")
                 elif item.is_dir():
-                    shutil.copytree(item, data_dir / item.name)
+                    if target.exists():
+                        shutil.rmtree(target)
+                    shutil.copytree(item, target)
+                    logger.info(f"Copied directory {item.name} to data directory")
         
-        logger.info(f"Loaded example data from {source_path} to {data_dir}")
+        # Verify files were copied
+        files = list(data_dir.glob("*"))
+        logger.info(f"Data directory now contains {len(files)} items: {[f.name for f in files]}")
+        
         return True
     except Exception as e:
-        logger.error(f"Failed to load example: {e}")
+        logger.error(f"Failed to load example: {e}", exc_info=True)
         return False

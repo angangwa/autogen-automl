@@ -92,9 +92,8 @@ async def run_analysis(
     
     # Clean up data and output directories if requested
     if cleanup_before_run:
-        logger.info("Cleaning up data and output directory before starting...")
+        logger.info("Cleaning output directory before starting...")
         cleanup_directory(outputs_dir)
-        cleanup_directory(data_dir)
 
     # Set up the Docker executor
     docker_executor = await setup_docker_executor(
@@ -179,5 +178,7 @@ async def run_analysis(
     finally:
         # Stop the Docker container
         logger.info("Stopping Docker container...")
-        docker_executor.stop()
+        cleanup_directory(outputs_dir)
+        cleanup_directory(data_dir)
+        await docker_executor.stop()
         logger.info("Docker container stopped")

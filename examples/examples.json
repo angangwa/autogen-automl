@@ -10,7 +10,7 @@
     },
     {
         "name": "IMDB Movie genre labeling (Multiiple Files)",
-        "data": "data/imdb_movides",
+        "data": "data/imdb_movies",
         "user_intent": "I have a dataset of IMDB movies. I want to use it to predict the genre of the movies",
         "outputs_dir": "outputs",
         "interactive": true,

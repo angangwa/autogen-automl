@@ -12,11 +12,10 @@ logger = logging.getLogger(__name__)
 
 def write_text_file(relative_filename: str, file_content: str) -> str:
     """
-    Write a text file in the output directory.
+    Write a text file in the output directory. Must provide both `relative_filename` and `file_content`.
     
     Args:
-        relative_filename: The relative filename to write. 
-            E.g. "output.md" is written to "/mnt/outputs/output.md".
+        relative_filename: The relative filename to write. E.g. "output.md" is written to "/mnt/outputs/output.md".
         file_content: The content to write to the file.
         
     Returns:
