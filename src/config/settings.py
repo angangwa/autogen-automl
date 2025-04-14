@@ -23,10 +23,12 @@ if not ANTHROPIC_API_KEY:
 # Paths
 DATA_DIR = os.getenv("DATA_DIR", str(BASE_DIR / "data"))
 OUTPUTS_DIR = os.getenv("OUTPUTS_DIR", str(BASE_DIR / "outputs"))
+HISTORY_DIR = os.getenv("HISTORY_DIR", str(BASE_DIR / "history"))
 
 # Ensure directories exist
 Path(DATA_DIR).mkdir(exist_ok=True)
 Path(OUTPUTS_DIR).mkdir(exist_ok=True)
+Path(HISTORY_DIR).mkdir(exist_ok=True)
 
 # Docker Settings
 DOCKER_IMAGE = os.getenv("DOCKER_IMAGE", "python:3.11")

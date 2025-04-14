@@ -39,6 +39,9 @@ data/*
 !data/.gitkeep
 outputs/*
 !outputs/.gitkeep
+history/
+history/*
+!history/.gitkeep
 
 # Logs
 *.log
