@@ -13,6 +13,7 @@ from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 
 from src.agents.data_analysis import DataAnalysisAgent
 from src.prompts.data_analysis import format_user_prompt
+from src.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,10 @@ class DataExplorationTeam:
         self,
         docker_executor: DockerCommandLineCodeExecutor,
         max_turns: int = 20,
+        model: str = None,
+        api_key: str = None,
+        model_provider: str = None,
+        reflect_on_tool_use: bool = None,
     ):
         """
         Initialize the Data Exploration team.
@@ -32,17 +37,40 @@ class DataExplorationTeam:
         Args:
             docker_executor: The Docker executor for running Python code.
             max_turns: The maximum number of turns for the conversation.
+            model: The model to use. If None, uses the value from settings.
+            api_key: The API key to use. If None, uses the value from settings.
+            model_provider: The model provider to use. If None, uses the value from settings.
+            reflect_on_tool_use: Whether agents should reflect on tool use.
         """
         self.docker_executor = docker_executor
         self.max_turns = max_turns
+        self.model = model or settings.AI_MODEL
+        self.api_key = api_key
+        self.model_provider = model_provider or settings.MODEL_PROVIDER
+        
+        # Set default reflect_on_tool_use based on model provider if not specified
+        if reflect_on_tool_use is None:
+            # Default to False for most models except some OpenAI models
+            if self.model_provider == "openai" and "gpt-4" in (self.model or "").lower():
+                reflect_on_tool_use = True
+            else:
+                reflect_on_tool_use = False
+        
+        self.reflect_on_tool_use = reflect_on_tool_use
         
         # Create the Data Analysis Agent
-        self.data_analysis_agent = DataAnalysisAgent(docker_executor)
+        self.data_analysis_agent = DataAnalysisAgent(
+            docker_executor, 
+            model=self.model,
+            api_key=self.api_key,
+            model_provider=self.model_provider,
+            reflect_on_tool_use=self.reflect_on_tool_use
+        )
         
         # Create the team
         self.team = self._create_team()
         
-        logger.info(f"Initialized Data Exploration team with max_turns={max_turns}")
+        logger.info(f"Initialized Data Exploration team with {self.model_provider} model {self.model}, max_turns={max_turns}")
     
     def _create_team(self) -> RoundRobinGroupChat:
         """

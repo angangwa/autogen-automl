@@ -1,6 +1,6 @@
 autogen-core
 autogen-agentchat
-autogen-ext[anthropic,openai,docker]
+autogen-ext[anthropic,openai,docker,azure]
 anthropic
 streamlit
 python-dotenv
@@ -9,3 +9,4 @@ pandas
 matplotlib
 plotly
 kaleido
+

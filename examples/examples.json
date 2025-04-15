@@ -16,5 +16,14 @@
         "interactive": true,
         "docker_wait_time": 30,
         "max_turns": 20
+    },
+    {
+        "name": "Wonders of the World",
+        "data": "data/wonders_of_the_world",
+        "user_intent": "I want to build a model to predict the wonder of the world from images",
+        "outputs_dir": "outputs",
+        "interactive": true,
+        "docker_wait_time": 30,
+        "max_turns": 20
     }
 ]

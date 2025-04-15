@@ -69,6 +69,10 @@ async def run_analysis(
     max_turns: int = 20,
     save_history: bool = True,
     cleanup_before_run: bool = True,
+    model: Optional[str] = None,
+    api_key: Optional[str] = None,
+    model_provider: Optional[str] = None,
+    reflect_on_tool_use: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Run an exploratory data analysis based on user intent.
@@ -82,6 +86,11 @@ async def run_analysis(
         max_turns: The maximum number of turns for the conversation.
         save_history: Whether to save the run history.
         cleanup_before_run: Whether to clean up the data and outputs directories before running.
+        model: The model to use. If None, uses the value from settings.
+        api_key: The API key to use. If None, uses the value from settings.
+        model_provider: The model provider to use (anthropic, openai, azure, google).
+                       If None, uses the value from settings.
+        reflect_on_tool_use: Whether agents should reflect on tool use.
         
     Returns:
         Dict[str, Any]: The analysis results.
@@ -107,7 +116,14 @@ async def run_analysis(
         data_files_info = format_data_files_info(data_dir)
         
         # Set up the Data Exploration team
-        team = DataExplorationTeam(docker_executor, max_turns=max_turns)
+        team = DataExplorationTeam(
+            docker_executor, 
+            max_turns=max_turns,
+            model=model,
+            api_key=api_key,
+            model_provider=model_provider,
+            reflect_on_tool_use=reflect_on_tool_use
+        )
         
         # Record the start time
         start_time = datetime.now()
@@ -127,6 +143,8 @@ async def run_analysis(
         results["end_time"] = end_time.isoformat()
         results["duration"] = (end_time - start_time).total_seconds()
         results["user_intent"] = user_intent
+        results["model_provider"] = model_provider or settings.MODEL_PROVIDER
+        results["model"] = model or settings.AI_MODEL
         
         # Save run history if requested
         if save_history and results["completed"]:
@@ -167,6 +185,8 @@ async def run_analysis(
                 "duration": (end_time - start_time).total_seconds(),
                 "completed": results["completed"],
                 "stop_reason": results["stop_reason"],
+                "model_provider": model_provider or settings.MODEL_PROVIDER,
+                "model": model or settings.AI_MODEL,
             }
             
             with open(history_dir / "run_details.json", "w") as f:
@@ -178,7 +198,5 @@ async def run_analysis(
     finally:
         # Stop the Docker container
         logger.info("Stopping Docker container...")
-        cleanup_directory(outputs_dir)
-        cleanup_directory(data_dir)
         await docker_executor.stop()
         logger.info("Docker container stopped")

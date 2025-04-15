@@ -50,6 +50,31 @@ if "file_category" not in st.session_state:
     st.session_state.file_category = None
 if "loaded_example" not in st.session_state:
     st.session_state.loaded_example = None
+if "model_provider" not in st.session_state:
+    st.session_state.model_provider = settings.MODEL_PROVIDER
+if "selected_model" not in st.session_state:
+    st.session_state.selected_model = settings.AI_MODEL
+
+# Define model options for each provider
+MODEL_OPTIONS = {
+    "anthropic": [
+        "claude-3-7-sonnet-20250219",
+    ],
+    "openai": [
+        "gpt-4o",
+        "gpt-4.1",
+        "gpt-4.1-mini",
+    ],
+    "azure": [
+        "gpt-4o",
+        "gpt-4.1",
+        "gpt-4.1-mini"
+    ],
+    "google": [
+        "gemini-2.5-pro-preview-03-25",
+        "gemini-2.0-flash",
+    ]
+}
 
 # Define functions
 def generate_html_preview(file_path: str) -> str:
@@ -165,6 +190,15 @@ def set_loaded_example(example):
             st.session_state.max_turns = example["max_turns"]
         return True
     return False
+
+def update_model_selection():
+    """Update the model selection dropdown based on the provider selection."""
+    provider = st.session_state.model_provider
+    model_options = MODEL_OPTIONS.get(provider, [])
+    
+    # If the current model isn't in the list for this provider, reset to the first available
+    if model_options and st.session_state.selected_model not in model_options:
+        st.session_state.selected_model = model_options[0]
 
 # Main App Structure
 def main():
@@ -304,6 +338,7 @@ def display_history_view():
             "Date": run.get("date_formatted", "Unknown"),
             "Intent": run.get("user_intent", "Unknown"),
             "Duration": f"{run.get('duration', 0):.1f} seconds",
+            "Model": f"{run.get('model_provider', 'Unknown')}/{run.get('model', 'Unknown')}",
             "Status": "Completed" if run.get("completed", False) else f"Stopped: {run.get('stop_reason', 'Unknown')}"
         })
     
@@ -318,6 +353,7 @@ def display_history_view():
             "Date": st.column_config.TextColumn("Date"),
             "Intent": st.column_config.TextColumn("User Intent"),
             "Duration": st.column_config.TextColumn("Duration"),
+            "Model": st.column_config.TextColumn("Model"),
             "Status": st.column_config.TextColumn("Status"),
         },
         use_container_width=True,
@@ -432,6 +468,39 @@ def display_main_view():
                         st.text(f"📄 {file}")
                     elif file_path.is_dir():
                         st.text(f"📁 {file}")
+
+        # Model settings
+        st.subheader("Model Settings")
+        
+        # Model provider selection
+        provider = st.selectbox(
+            "AI Model Provider",
+            options=["anthropic", "openai", "azure", "google"],
+            index=["anthropic", "openai", "azure", "google"].index(st.session_state.model_provider),
+            key="model_provider",
+            on_change=update_model_selection,
+            help="Select the AI model provider to use for analysis"
+        )
+        
+        # Display appropriate model options based on provider
+        model_options = MODEL_OPTIONS.get(provider, [])
+        selected_model = st.selectbox(
+            "AI Model",
+            options=model_options,
+            index=model_options.index(st.session_state.selected_model) if st.session_state.selected_model in model_options else 0,
+            key="selected_model",
+            help="Select the specific model to use for analysis"
+        )
+        
+        # Provider-specific settings
+        if provider == "azure":
+            # Add Azure-specific settings
+            st.text_input("Azure Deployment", value=settings.AZURE_DEPLOYMENT or "", key="azure_deployment",
+                         help="The Azure deployment name for your model")
+            st.text_input("Azure Endpoint", value=settings.AZURE_ENDPOINT or "", key="azure_endpoint",
+                        help="The Azure endpoint URL")
+            st.text_input("Azure API Version", value=settings.AZURE_API_VERSION, key="azure_api_version",
+                        help="The Azure OpenAI API version")
         
         # Advanced settings
         st.subheader("Advanced Settings")
@@ -480,6 +549,12 @@ def display_main_view():
             help="Clean output directory before running."
         )
 
+        # Set default reflect_on_tool_use based on model provider
+        reflect_on_tool_use = False
+        if provider == "openai" and "gpt-4" in selected_model.lower():
+            reflect_on_tool_use = True
+        st.session_state.reflect_on_tool_use = reflect_on_tool_use
+
     # Main content area - using full width instead of columns
     # ML intent input
     st.header("Machine Learning Intent")
@@ -516,6 +591,20 @@ def display_main_view():
             progress_bar.progress(20)
             status.info("Running analysis... (this might take a few minutes)")
             
+            # Get Azure-specific settings if needed
+            azure_deployment = None
+            azure_endpoint = None
+            azure_api_version = None
+            if st.session_state.model_provider == "azure":
+                azure_deployment = st.session_state.get("azure_deployment")
+                azure_endpoint = st.session_state.get("azure_endpoint")
+                azure_api_version = st.session_state.get("azure_api_version")
+                
+                # Set environment variables for Azure
+                os.environ["AZURE_DEPLOYMENT"] = azure_deployment or ""
+                os.environ["AZURE_ENDPOINT"] = azure_endpoint or ""
+                os.environ["AZURE_API_VERSION"] = azure_api_version or ""
+            
             # Run the analysis
             try:
                 # Use asyncio to run the async function
@@ -531,6 +620,9 @@ def display_main_view():
                         max_turns=max_turns,
                         save_history=save_history,
                         cleanup_before_run=cleanup_before_run,
+                        model=st.session_state.selected_model,
+                        model_provider=st.session_state.model_provider,
+                        reflect_on_tool_use=st.session_state.reflect_on_tool_use,
                     )
                 )
                 
@@ -737,7 +829,7 @@ def display_main_view():
     st.markdown("---")
     st.markdown(
         "AutoGen EDA: An AI-powered Exploratory Data Analysis Application | "
-        "Built with Streamlit, AutoGen, and Claude"
+        f"Selected Model: {st.session_state.model_provider}/{st.session_state.selected_model}"
     )
 
 # Launch the app

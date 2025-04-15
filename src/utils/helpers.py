@@ -147,6 +147,18 @@ def get_run_history() -> List[Dict[str, Any]]:
                 run_details['path'] = str(run_dir)
                 run_details['date_formatted'] = format_datetime(run_details.get('start_time'))
                 
+                # Format model information if available
+                if 'model_provider' in run_details and 'model' in run_details:
+                    run_details['model_formatted'] = f"{run_details['model_provider']}/{run_details['model']}"
+                elif 'model' in run_details:
+                    # Backwards compatibility with older runs that only have model name
+                    run_details['model_formatted'] = f"anthropic/{run_details['model']}"
+                    run_details['model_provider'] = "anthropic"
+                else:
+                    run_details['model_formatted'] = "Unknown model"
+                    run_details['model_provider'] = "unknown"
+                    run_details['model'] = "unknown"
+                
                 runs.append(run_details)
             except Exception as e:
                 logger.error(f"Failed to read run details from {details_file}: {e}")
@@ -185,6 +197,18 @@ def get_run_details(run_id: str) -> Optional[Dict[str, Any]]:
         run_details['outputs_path'] = str(run_dir / "outputs")
         run_details['data_path'] = str(run_dir / "data")
         run_details['date_formatted'] = format_datetime(run_details.get('start_time'))
+        
+        # Format model information if available
+        if 'model_provider' in run_details and 'model' in run_details:
+            run_details['model_formatted'] = f"{run_details['model_provider']}/{run_details['model']}"
+        elif 'model' in run_details:
+            # Backwards compatibility with older runs that only have model name
+            run_details['model_formatted'] = f"anthropic/{run_details['model']}"
+            run_details['model_provider'] = "anthropic"
+        else:
+            run_details['model_formatted'] = "Unknown model"
+            run_details['model_provider'] = "unknown"
+            run_details['model'] = "unknown"
         
         return run_details
     except Exception as e:

@@ -18,7 +18,7 @@ async def analyze_image(
     query: str = "Analyze this data visualization image and describe what you see. Focus on trends, patterns, outliers, and any insights that would be relevant for data analysis."
 ) -> str:
     """
-    Analyze an image using Anthropic's Claude vision capabilities.
+    Analyze a given image or plot using visual capabilities. Use query to ask specific questions about the image or plot.
     
     Args:
         image_path: Path to the image file. Relative to output directory. e.g. "image.jpg".

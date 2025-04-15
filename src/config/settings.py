@@ -17,8 +17,21 @@ SRC_DIR = BASE_DIR / "src"
 
 # API Keys
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-if not ANTHROPIC_API_KEY:
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+# Warn about missing API keys only if we're using a specific model provider
+MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "anthropic").lower()  # anthropic, openai, azure, google
+
+if MODEL_PROVIDER == "anthropic" and not ANTHROPIC_API_KEY:
     logging.warning("ANTHROPIC_API_KEY not set in environment variables.")
+elif MODEL_PROVIDER == "openai" and not OPENAI_API_KEY:
+    logging.warning("OPENAI_API_KEY not set in environment variables.")
+elif MODEL_PROVIDER == "azure" and not AZURE_OPENAI_API_KEY and not os.getenv("AZURE_AD_TOKEN"):
+    logging.warning("Neither AZURE_OPENAI_API_KEY nor AZURE_AD_TOKEN set for Azure authentication.")
+elif MODEL_PROVIDER == "google" and not GOOGLE_API_KEY:
+    logging.warning("GOOGLE_API_KEY not set in environment variables.")
 
 # Paths
 DATA_DIR = os.getenv("DATA_DIR", str(BASE_DIR / "data"))
@@ -39,6 +52,12 @@ DOCKER_INIT_PACKAGES = os.getenv(
 
 # Model Settings
 AI_MODEL = os.getenv("AI_MODEL", "claude-3-7-sonnet-20250219")
+
+# Model Provider-specific settings
+# Azure OpenAI settings
+AZURE_DEPLOYMENT = os.getenv("AZURE_DEPLOYMENT")
+AZURE_ENDPOINT = os.getenv("AZURE_ENDPOINT")
+AZURE_API_VERSION = os.getenv("AZURE_API_VERSION", "2024-06-01")
 
 # Application Settings
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")

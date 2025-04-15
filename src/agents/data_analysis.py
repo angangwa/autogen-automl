@@ -28,6 +28,8 @@ class DataAnalysisAgent(BaseAgent):
         system_message: str = SYSTEM_PROMPT,
         model: str = None,
         api_key: str = None,
+        model_provider: str = None,
+        reflect_on_tool_use: bool = False, # False for most models except some OpenAI models
     ):
         """
         Initialize the Data Analysis Agent.
@@ -38,6 +40,8 @@ class DataAnalysisAgent(BaseAgent):
             system_message: The system message for the agent.
             model: The model to use. If None, uses the value from settings.
             api_key: The API key to use. If None, uses the value from settings.
+            model_provider: The model provider to use. If None, uses the value from settings.
+            reflect_on_tool_use: Whether the agent should reflect on tool use.
         """
         self.docker_executor = docker_executor
         
@@ -51,7 +55,8 @@ class DataAnalysisAgent(BaseAgent):
             tools=tools,
             model=model,
             api_key=api_key,
-            reflect_on_tool_use=False  # False for Anthropic models
+            model_provider=model_provider,
+            reflect_on_tool_use=reflect_on_tool_use
         )
         
         logger.info(f"Initialized {self.name} with {len(tools)} tools")
