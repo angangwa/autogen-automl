@@ -11,13 +11,25 @@ import base64
 import logging
 from typing import Dict, List, Optional
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging - Single setup for all loggers
+logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 # Add the parent directory to the path so we can import from src
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+# Configure specific loggers
+from autogen_core import EVENT_LOGGER_NAME
+autogen_logger = logging.getLogger(EVENT_LOGGER_NAME)
+autogen_logger.setLevel(logging.ERROR)
+
+# Set httpx logging to ERROR level
+logging.getLogger("httpx").setLevel(logging.ERROR)
+
+# Also silence other common verbose loggers
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("asyncio").setLevel(logging.ERROR)
 
 from src.config import settings
 from src import run_analysis

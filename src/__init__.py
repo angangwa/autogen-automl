@@ -16,10 +16,14 @@ from autogen_core import EVENT_LOGGER_NAME
 from src.config import settings
 
 # Configure autogen logging to reduce verbosity
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.ERROR)
 autogen_logger = logging.getLogger(EVENT_LOGGER_NAME)
 autogen_logger.addHandler(logging.StreamHandler())
 autogen_logger.setLevel(logging.ERROR)
+# Set httpx logging to ERROR level
+httpx_logger = logging.getLogger("httpx")
+httpx_logger.addHandler(logging.StreamHandler())
+httpx_logger.setLevel(logging.ERROR)
 
 from src.executors.docker import setup_docker_executor
 from src.teams.data_exploration import DataExplorationTeam
