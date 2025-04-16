@@ -13,6 +13,7 @@ from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 
 from src.agents.data_analysis import DataAnalysisAgent
 from src.prompts.data_analysis import format_user_prompt
+from src.utils.console import CustomConsole
 from src.config import settings
 
 logger = logging.getLogger(__name__)
@@ -127,7 +128,11 @@ class DataExplorationTeam:
             stream = self.team.run_stream(task=task)
             
             # Display the stream in the console and get the response
-            response = await Console(stream, output_stats=True)
+            response = await CustomConsole(
+                stream,
+                output_stats=True,
+                show_technical_details=True
+            )
                         
             # Check the stop reason
             if "ANALYSIS COMPLETE" in response.stop_reason:

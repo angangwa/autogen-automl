@@ -11,26 +11,50 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
+
+# Configure logging - This needs to happen before any other imports
+# Set root logger to ERROR level
+logging.basicConfig(level=logging.ERROR, force=True)
+
+# Configure all known verbose loggers to ERROR level - add more if needed
+VERBOSE_LOGGERS = [
+    "autogen_core",
+    "autogen_agentchat", 
+    "openai",
+    "anthropic",
+    "httpx",
+    "urllib3",
+    "asyncio",
+    "httpcore",
+    "matplotlib",
+    "PIL",
+    "docker",
+]
+
+# Silence all the verbose loggers
+for logger_name in VERBOSE_LOGGERS:
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.ERROR)
+    # Remove any existing handlers to prevent duplicate logs
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+
+# For autogen events specifically
 from autogen_core import EVENT_LOGGER_NAME
+event_logger = logging.getLogger(EVENT_LOGGER_NAME)
+event_logger.setLevel(logging.ERROR)
+# Remove any existing handlers
+for handler in event_logger.handlers[:]:
+    event_logger.removeHandler(handler)
+
+# Create our application logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Keep this at INFO so you see important app messages
 
 from src.config import settings
-
-# Configure autogen logging to reduce verbosity
-logging.basicConfig(level=logging.ERROR)
-autogen_logger = logging.getLogger(EVENT_LOGGER_NAME)
-autogen_logger.addHandler(logging.StreamHandler())
-autogen_logger.setLevel(logging.ERROR)
-# Set httpx logging to ERROR level
-httpx_logger = logging.getLogger("httpx")
-httpx_logger.addHandler(logging.StreamHandler())
-httpx_logger.setLevel(logging.ERROR)
-
 from src.executors.docker import setup_docker_executor
 from src.teams.data_exploration import DataExplorationTeam
 from src.utils.helpers import format_data_files_info
-
-
-logger = logging.getLogger(__name__)
 
 
 def generate_run_id(prefix="automl_run_"):
