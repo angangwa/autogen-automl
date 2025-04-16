@@ -129,9 +129,7 @@ class DataExplorationTeam:
             
             # Display the stream in the console and get the response
             response = await CustomConsole(
-                stream,
-                output_stats=True,
-                show_technical_details=True
+                stream
             )
                         
             # Check the stop reason
@@ -169,3 +167,15 @@ class DataExplorationTeam:
         team_state = await self.team.save_state()
 
         return results, team_state
+
+    def save_team(self, file_name: str) -> None:
+        """
+        Save the team state to a file.
+        """
+        logger.info("Saving team state...")
+        component = self.team.dump_component()
+        component_json = component.model_dump_json()
+        with open(file_name, "w") as f:
+            f.write(component_json)
+        logger.info(f"Team component saved to {file_name}")
+        

@@ -10,7 +10,13 @@ from autogen_ext.tools.code_execution import PythonCodeExecutionTool
 from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 
 from src.agents.base import BaseAgent
-from src.tools.file_tools import write_text_file
+from src.tools.file_tools import (
+    write_text_file,
+    read_text_file,
+    append_text_file,
+    list_files_in_directory,
+    search_files
+)
 from src.tools.image_tools import analyze_image
 from src.prompts.data_analysis import SYSTEM_PROMPT
 
@@ -71,10 +77,26 @@ class DataAnalysisAgent(BaseAgent):
         # Create the Python code execution tool
         coding_tool = PythonCodeExecutionTool(self.docker_executor)
         
-        # Create the file writing tool
+        # File tools
         write_text_file_tool = FunctionTool(
             write_text_file, 
             description="Write a text file in the output directory."
+        )
+        read_text_file_tool = FunctionTool(
+            read_text_file,
+            description="Read up to 1000 lines from a text file in the outputs or data directory."
+        )
+        append_text_file_tool = FunctionTool(
+            append_text_file,
+            description="Append text to a file in the outputs or data directory."
+        )
+        list_files_tool = FunctionTool(
+            list_files_in_directory,
+            description="List files in the outputs or data directory. Supports recursive listing."
+        )
+        search_files_tool = FunctionTool(
+            search_files,
+            description="Search for files matching a glob pattern in outputs or data directory."
         )
         
         # Create the image analysis tool
@@ -86,5 +108,9 @@ class DataAnalysisAgent(BaseAgent):
         return [
             coding_tool,
             write_text_file_tool,
+            read_text_file_tool,
+            append_text_file_tool,
+            list_files_tool,
+            search_files_tool,
             analyze_image_tool
         ]

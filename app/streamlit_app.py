@@ -76,11 +76,13 @@ MODEL_OPTIONS = {
         "gpt-4o",
         "gpt-4.1",
         "gpt-4.1-mini",
+        "o4-mini-2025-04-16"
     ],
     "azure": [
         "gpt-4o",
         "gpt-4.1",
-        "gpt-4.1-mini"
+        "gpt-4.1-mini",
+        "o4-mini-2025-04-16"
     ],
     "google": [
         "gemini-2.5-pro-preview-03-25",

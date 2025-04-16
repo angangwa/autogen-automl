@@ -25,5 +25,14 @@
         "interactive": true,
         "docker_wait_time": 30,
         "max_turns": 20
+    },
+    {
+        "name": "Receipt OCR",
+        "data": "data/ocr",
+        "user_intent": "I want to create an ML model that can extract relevant details from images of reciepts. These receipts could be digital or hand written and in English or Hindi.",
+        "outputs_dir": "outputs",
+        "interactive": true,
+        "docker_wait_time": 30,
+        "max_turns": 20
     }
 ]

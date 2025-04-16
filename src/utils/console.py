@@ -23,6 +23,7 @@ from autogen_agentchat.messages import (
     ThoughtEvent, UserInputRequestedEvent, MemoryQueryEvent
 )
 from autogen_agentchat.messages import RequestUsage
+from src.config import settings
 
 # Configure logger - should respect existing settings from __init__.py
 logger = logging.getLogger(__name__)
@@ -120,10 +121,10 @@ def format_multimodal(message: MultiModalMessage, no_inline_images: bool) -> Pan
 async def CustomConsole(
     stream: AsyncGenerator[BaseAgentEvent | BaseChatMessage | T, None],
     *,
-    no_inline_images: bool = False,
-    output_stats: bool = False,
-    show_technical_details: bool = False,
-    silent_logging: bool = True,  # Control logger silencing
+    no_inline_images: bool = None,
+    output_stats: bool = None,
+    show_technical_details: bool = None,
+    silent_logging: bool = None,  # Control logger silencing
 ) -> T:
     """
     Consumes the message stream from autogen run_stream or on_messages_stream
@@ -140,7 +141,19 @@ async def CustomConsole(
     Returns:
         The last processed TaskResult or Response
     """
-    # Silence logs if requested
+    # Use settings defaults if not provided
+    if no_inline_images is None:
+        no_inline_images = settings.CONSOLE_NO_INLINE_IMAGES
+    if output_stats is None:
+        output_stats = settings.CONSOLE_OUTPUT_STATS
+    if show_technical_details is None:
+        show_technical_details = settings.CONSOLE_SHOW_TECHNICAL_DETAILS
+    if silent_logging is None:
+        silent_logging = settings.CONSOLE_SILENT_LOGGING
+
+    # Set log level from settings
+    logging.getLogger().setLevel(getattr(logging, settings.LOG_LEVEL))
+
     if silent_logging:
         for logger_name in ["autogen_core", "autogen_agentchat", "httpx", "urllib3"]:
             logging.getLogger(logger_name).setLevel(logging.ERROR)

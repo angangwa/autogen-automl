@@ -61,7 +61,20 @@ AZURE_API_VERSION = os.getenv("AZURE_API_VERSION", "2024-06-01")
 
 # Application Settings
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "ERROR")  # Default to ERROR unless set explicitly
+
+# Console Settings (all can be overridden by environment variables)
+CONSOLE_SHOW_TECHNICAL_DETAILS = os.getenv("CONSOLE_SHOW_TECHNICAL_DETAILS", "False").lower() in ("true", "1", "t")
+CONSOLE_OUTPUT_STATS = os.getenv("CONSOLE_OUTPUT_STATS", "True").lower() in ("true", "1", "t")
+CONSOLE_NO_INLINE_IMAGES = os.getenv("CONSOLE_NO_INLINE_IMAGES", "False").lower() in ("true", "1", "t")
+CONSOLE_SILENT_LOGGING = os.getenv("CONSOLE_SILENT_LOGGING", "True").lower() in ("true", "1", "t")
+
+# Standardized defaults for analysis behavior
+INTERACTIVE = os.getenv("INTERACTIVE", "True").lower() in ("true", "1", "t")
+DOCKER_WAIT_TIME = int(os.getenv("DOCKER_WAIT_TIME", 30))
+MAX_TURNS = int(os.getenv("MAX_TURNS", 20))
+SAVE_HISTORY = os.getenv("SAVE_HISTORY", "True").lower() in ("true", "1", "t")
+CLEANUP_BEFORE_RUN = os.getenv("CLEANUP_BEFORE_RUN", "True").lower() in ("true", "1", "t")
 
 # Configure logging
 logging.basicConfig(
