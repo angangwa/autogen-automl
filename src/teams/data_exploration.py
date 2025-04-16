@@ -159,4 +159,6 @@ class DataExplorationTeam:
                 task = "Please wrap up your analysis quickly and provide the final results. Ask the user if you need help.\n"
                 results["stop_reason"] = "UNKNOWN"
         
-        return results
+        team_state = await self.team.save_state()
+
+        return results, team_state

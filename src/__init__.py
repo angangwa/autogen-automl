@@ -133,7 +133,7 @@ async def run_analysis(
         start_time = datetime.now()
         
         # Run the analysis
-        results = await team.run_analysis(
+        results, team_state = await team.run_analysis(
             user_intent=user_intent,
             data_files=data_files_info,
             interactive=interactive
@@ -191,6 +191,7 @@ async def run_analysis(
                 "stop_reason": results["stop_reason"],
                 "model_provider": model_provider or settings.MODEL_PROVIDER,
                 "model": model or settings.AI_MODEL,
+                "team_state": team_state
             }
             
             with open(history_dir / "run_details.json", "w") as f:
