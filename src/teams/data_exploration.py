@@ -6,12 +6,15 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-from autogen_agentchat.teams import RoundRobinGroupChat
+from autogen_agentchat.teams import RoundRobinGroupChat, Swarm
 from autogen_agentchat.ui import Console
-from autogen_agentchat.conditions import TextMentionTermination
+from autogen_agentchat.conditions import TextMentionTermination, HandoffTermination
+from autogen_agentchat.messages import HandoffMessage
 from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 
 from src.agents.data_analysis import DataAnalysisAgent
+from src.agents.ideation import IdeationAgent
+
 from src.prompts.data_analysis import format_user_prompt
 from src.utils.console import CustomConsole
 from src.config import settings
@@ -65,7 +68,17 @@ class DataExplorationTeam:
             model=self.model,
             api_key=self.api_key,
             model_provider=self.model_provider,
-            reflect_on_tool_use=self.reflect_on_tool_use
+            reflect_on_tool_use=self.reflect_on_tool_use,
+            handoffs=["ideation_agent", "user"],
+        )
+        
+        self.ideation_agent = IdeationAgent(
+            docker_executor, 
+            model=self.model,
+            api_key=self.api_key,
+            model_provider=self.model_provider,
+            reflect_on_tool_use=self.reflect_on_tool_use,
+            handoffs=["data_analysis_agent", "user"],
         )
         
         # Create the team
@@ -81,17 +94,21 @@ class DataExplorationTeam:
             RoundRobinGroupChat: The team.
         """
         # Set up termination conditions
-        termination_conditions = (
-            TextMentionTermination("USER QUESTION") | 
-            TextMentionTermination("ANALYSIS COMPLETE")
-        )
+        # termination_conditions = (
+        #     TextMentionTermination("USER QUESTION") | 
+        #     TextMentionTermination("REPORT COMPLETE")
+        # )
         
         # Create the team
-        team = RoundRobinGroupChat(
-            participants=[self.data_analysis_agent.agent],
-            max_turns=self.max_turns,
-            termination_condition=termination_conditions,
-        )
+        # team = RoundRobinGroupChat(
+        #     participants=[self.data_analysis_agent.agent],
+        #     max_turns=self.max_turns,
+        #     termination_condition=termination_conditions,
+        # )
+        
+
+        termination = HandoffTermination(target="user") | TextMentionTermination("REPORT COMPLETE")
+        team = Swarm([self.data_analysis_agent.agent, self.ideation_agent.agent], termination_condition=termination, max_turns=self.max_turns)
         
         return team
     
@@ -131,18 +148,31 @@ class DataExplorationTeam:
             response = await CustomConsole(
                 stream
             )
+            
+            last_message = response.messages[-1]
+
+            while isinstance(last_message, HandoffMessage) and last_message.target == "user":
+                user_message = input("User: ")
+
+                task_result = await Console(
+                    self.team.run_stream(task=HandoffMessage(source="user", target=last_message.source, content=user_message))
+                )
+                last_message = task_result.messages[-1]
+
                         
             # Check the stop reason
-            if "ANALYSIS COMPLETE" in response.stop_reason:
+            if "REPORT COMPLETE" in response.stop_reason:
                 logger.info("Analysis complete.")
                 results["completed"] = True
-                results["stop_reason"] = "ANALYSIS COMPLETE"
+                results["stop_reason"] = "REPORT COMPLETE"
                 break
             elif "Maximum number of messages" in response.stop_reason:
                 logger.warning("Maximum number of messages reached.")
-                task = "Please wrap up your analysis quickly and provide the final results."
+                # task = "Please wrap up your analysis quickly and provide the final results."
+                msg = "Please wrap up your analysis quickly and provide the final results."
+                task = HandoffMessage(source="user", target=last_message.source, content=msg)
                 results["stop_reason"] = "MAX_MESSAGES"
-            elif "USER QUESTION" in response.stop_reason:
+            elif isinstance(last_message, HandoffMessage) and last_message.target == "user":
                 results["stop_reason"] = "USER QUESTION"
                 if interactive:
                     # Get user feedback
@@ -153,10 +183,11 @@ class DataExplorationTeam:
                         break
                     
                     # Continue with user feedback
-                    task = user_feedback
+                    task = HandoffMessage(source="user", target=last_message.source, content=user_feedback)
                 else:
                     # Non-interactive mode, just provide a generic response
-                    task = "Please continue with the analysis based on the available information. Complete your analysis if you can't proceed."
+                    msg = "Please continue with the analysis based on the available information. Complete your analysis if you can't proceed."
+                    HandoffMessage(source="user", target=last_message.source, content=msg)
             else:
                 logger.warning(f"Unexpected stop reason: {response.stop_reason}")
                 task = "Please wrap up your analysis quickly and provide the final results. Ask the user if you need help.\n"

@@ -72,7 +72,7 @@ CONSOLE_SILENT_LOGGING = os.getenv("CONSOLE_SILENT_LOGGING", "True").lower() in 
 # Standardized defaults for analysis behavior
 INTERACTIVE = os.getenv("INTERACTIVE", "True").lower() in ("true", "1", "t")
 DOCKER_WAIT_TIME = int(os.getenv("DOCKER_WAIT_TIME", 30))
-MAX_TURNS = int(os.getenv("MAX_TURNS", 20))
+MAX_TURNS = int(os.getenv("MAX_TURNS", 30))
 SAVE_HISTORY = os.getenv("SAVE_HISTORY", "True").lower() in ("true", "1", "t")
 CLEANUP_BEFORE_RUN = os.getenv("CLEANUP_BEFORE_RUN", "True").lower() in ("true", "1", "t")
 

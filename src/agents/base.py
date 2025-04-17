@@ -28,10 +28,12 @@ class BaseAgent(ABC):
         name: str,
         system_message: str,
         tools: List[Any],
+        description: str,
         model: str = None,
         api_key: str = None,
         model_provider: str = None,
         reflect_on_tool_use: bool = False,
+        handoffs: Optional[List[str]] = None,
     ):
         """
         Initialize the base agent.
@@ -53,6 +55,8 @@ class BaseAgent(ABC):
         self.api_key = api_key
         self.model_provider = model_provider or settings.MODEL_PROVIDER
         self.reflect_on_tool_use = reflect_on_tool_use
+        self.handoffs = handoffs or []
+        self.description = description
         
         # Create the model client
         self.model_client = self._create_model_client()
@@ -151,7 +155,9 @@ class BaseAgent(ABC):
             system_message=self.system_message,
             reflect_on_tool_use=self.reflect_on_tool_use,
             model_client=self.model_client,
-            tools=self.tools
+            tools=self.tools,
+            handoffs=self.handoffs,
+            description=self.description,
         )
     
     @abstractmethod

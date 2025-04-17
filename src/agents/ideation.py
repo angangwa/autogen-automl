@@ -1,5 +1,5 @@
 """
-Data Analysis Agent for the AutoGen EDA application.
+Ideation Agent for the AutoGen EDA application.
 """
 
 import logging
@@ -18,11 +18,11 @@ from src.tools.file_tools import (
     search_files
 )
 from src.tools.image_tools import analyze_image
-from src.prompts.data_analysis import SYSTEM_PROMPT
+from src.prompts.ideation import SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
-class DataAnalysisAgent(BaseAgent):
+class IdeationAgent(BaseAgent):
     """
     Data Analysis Agent for exploratory data analysis.
     """
@@ -30,8 +30,8 @@ class DataAnalysisAgent(BaseAgent):
     def __init__(
         self,
         docker_executor: DockerCommandLineCodeExecutor,
-        name: str = "data_analysis_agent",
-        description: str = "Data Analysis Agen that performs exploratory data analysis and produces reports.",
+        name: str = "ideation_agent",
+        description: str = "ML Ideation Agent that is a lead ML Engineer. Review the data analysis report to create Ml approached.",
         system_message: str = SYSTEM_PROMPT,
         model: str = None,
         api_key: str = None,
