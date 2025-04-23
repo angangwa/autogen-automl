@@ -10,6 +10,12 @@ AutoGen AutoML is a production-ready application that leverages AI agents to per
 - **Docker Integration**: Runs code in isolated containers for security
 - **Extensible Architecture**: Designed for future expansion with more agents
 
+
+
+https://github.com/user-attachments/assets/9778bd16-b474-454c-b08c-ccdaf6eeda7f
+
+
+
 ## Project Structure
 
 ```
