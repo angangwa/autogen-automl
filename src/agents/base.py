@@ -13,6 +13,7 @@ from autogen_ext.auth.azure import AzureTokenProvider
 from autogen_core.tools import FunctionTool
 from autogen_core.models import ChatCompletionClient
 from autogen_core.models import ModelInfo
+from autogen_core.model_context import HeadAndTailChatCompletionContext
 
 from src.config import settings
 
@@ -158,6 +159,10 @@ class BaseAgent(ABC):
             tools=self.tools,
             handoffs=self.handoffs,
             description=self.description,
+            model_context=HeadAndTailChatCompletionContext(
+                head_size=2,
+                tail_size=15,
+            )
         )
     
     @abstractmethod

@@ -38,6 +38,9 @@ from src.utils.helpers import (
     get_run_history, get_run_details, load_run_to_current,
     get_available_examples, load_example_to_current
 )
+from src.utils.history_visualizer import (
+    RunHistoryVisualizer, get_run_conversation_html, get_run_agent_list
+)
 
 # Set page config
 st.set_page_config(
@@ -53,7 +56,7 @@ if "analysis_completed" not in st.session_state:
 if "run_id" not in st.session_state:
     st.session_state.run_id = None
 if "current_view" not in st.session_state:
-    st.session_state.current_view = "main"  # Options: main, history, viewer, examples
+    st.session_state.current_view = "main"  # Options: main, history, viewer, examples, conversation
 if "selected_run" not in st.session_state:
     st.session_state.selected_run = None
 if "selected_file" not in st.session_state:
@@ -66,6 +69,8 @@ if "model_provider" not in st.session_state:
     st.session_state.model_provider = settings.MODEL_PROVIDER
 if "selected_model" not in st.session_state:
     st.session_state.selected_model = settings.AI_MODEL
+if "selected_agent" not in st.session_state:
+    st.session_state.selected_agent = "swarm"
 
 # Define model options for each provider
 MODEL_OPTIONS = {
@@ -76,13 +81,15 @@ MODEL_OPTIONS = {
         "gpt-4o",
         "gpt-4.1",
         "gpt-4.1-mini",
-        "o4-mini-2025-04-16"
+        "o4-mini-2025-04-16",
+        "o3"
     ],
     "azure": [
         "gpt-4o",
         "gpt-4.1",
         "gpt-4.1-mini",
-        "o4-mini-2025-04-16"
+        "o4-mini-2025-04-16",
+        "o3",
     ],
     "google": [
         "gemini-2.5-pro-preview-03-25",
@@ -226,6 +233,8 @@ def main():
         display_file_viewer_page()
     elif st.session_state.current_view == "examples":
         display_examples_view()
+    elif st.session_state.current_view == "conversation":
+        display_conversation_view()
     else:
         display_main_view()
 
@@ -392,6 +401,13 @@ def display_history_view():
         change_view("main")
         st.success(f"Loaded run: {run_id}")
         st.rerun()
+    
+    # Add a view conversation button
+    if st.button("View Agent Conversation", key="view_conversation"):
+        run_id = run_data[selected_run_index]["ID"]
+        st.session_state.selected_run = run_id
+        change_view("conversation")
+        st.rerun()
 
 # File Viewer Page
 def display_file_viewer_page():
@@ -414,6 +430,61 @@ def display_file_viewer_page():
         st.error("No file selected.")
         change_view("main")
         st.rerun()
+
+# Conversation View
+def display_conversation_view():
+    """Display the conversation history for a selected run."""
+    st.markdown("""
+    ## Agent Conversation Viewer
+    View the conversation history between agents for a previous run.
+    """)
+    
+    # Add back button
+    if st.button("← Back to History", key="back_from_conversation"):
+        change_view("history")
+        st.rerun()
+    
+    # Check if a run is selected
+    if not st.session_state.selected_run:
+        st.error("No run selected. Please go back to history and select a run.")
+        if st.button("Go to History", key="goto_history"):
+            change_view("history")
+            st.rerun()
+        return
+    
+    run_id = st.session_state.selected_run
+    
+    # Get available agents for this run
+    try:
+        agents = get_run_agent_list(run_id)
+        
+        if not agents:
+            st.warning("No conversation data found for this run.")
+            return
+        
+        # Select agent to view
+        selected_agent = st.selectbox(
+            "Select agent conversation to view:",
+            options=agents,
+            index=agents.index(st.session_state.selected_agent) if st.session_state.selected_agent in agents else 0,
+            key="conversation_agent_select"
+        )
+        st.session_state.selected_agent = selected_agent
+        
+        # Get the HTML-formatted conversation
+        conversation_html = get_run_conversation_html(run_id, selected_agent)
+        
+        # Display the conversation
+        st.components.v1.html(conversation_html, height=800, scrolling=True)
+        
+        # Add a button to view results
+        if st.button("View Analysis Results", key="view_results"):
+            change_view("main")
+            st.rerun()
+            
+    except Exception as e:
+        st.error(f"Error loading conversation: {str(e)}")
+        logger.error(f"Error loading conversation: {e}", exc_info=True)
 
 # Main View
 def display_main_view():

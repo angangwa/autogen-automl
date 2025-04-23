@@ -64,7 +64,7 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "ERROR")  # Default to ERROR unless set explicitly
 
 # Console Settings (all can be overridden by environment variables)
-CONSOLE_SHOW_TECHNICAL_DETAILS = os.getenv("CONSOLE_SHOW_TECHNICAL_DETAILS", "False").lower() in ("true", "1", "t")
+CONSOLE_SHOW_TECHNICAL_DETAILS = os.getenv("CONSOLE_SHOW_TECHNICAL_DETAILS", "true").lower() in ("true", "1", "t")
 CONSOLE_OUTPUT_STATS = os.getenv("CONSOLE_OUTPUT_STATS", "True").lower() in ("true", "1", "t")
 CONSOLE_NO_INLINE_IMAGES = os.getenv("CONSOLE_NO_INLINE_IMAGES", "False").lower() in ("true", "1", "t")
 CONSOLE_SILENT_LOGGING = os.getenv("CONSOLE_SILENT_LOGGING", "True").lower() in ("true", "1", "t")

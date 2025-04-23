@@ -100,7 +100,7 @@ def list_files_in_directory(directory: str = "outputs", recursive: bool = False)
     """
     try:
         if directory not in ("outputs", "data"):
-            return []
+            return "Invalid directory. Only 'outputs' or 'data' allowed."
         base_dir = settings.OUTPUTS_DIR if directory == "outputs" else settings.DATA_DIR
         base_path = Path(base_dir)
         if not recursive:
@@ -122,7 +122,7 @@ def search_files(pattern: str, directory: str = "outputs") -> list:
     """
     try:
         if directory not in ("outputs", "data"):
-            return []
+            return "Invalid directory. Only 'outputs' or 'data' allowed."
         base_dir = settings.OUTPUTS_DIR if directory == "outputs" else settings.DATA_DIR
         base_path = Path(base_dir)
         return [str(p.relative_to(base_path)) for p in base_path.rglob(pattern) if p.is_file()]

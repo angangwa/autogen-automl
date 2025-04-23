@@ -99,6 +99,58 @@ The application generates four main output files:
 3. **analysis.py**: Clean, commented Python code to reproduce the analysis
 4. **analysis_result.md**: Complete analysis result including visualizations
 
+## Conversation History Visualization
+
+The application includes a feature to visualize the complete conversation history between agents from previous runs:
+
+### Using the Streamlit UI
+
+1. Navigate to "Previous Runs" from the main page
+2. Select a run from the list
+3. Click "View Agent Conversation" button
+4. In the conversation view:
+   - Select an agent to view its perspective (e.g., "swarm", "data_analysis_agent", etc.)
+   - The conversation is displayed with color-coded messages by type
+   - Click "View Analysis Results" to return to the results view
+
+### Using the Command Line
+
+You can also visualize past runs from a Python script or terminal:
+
+```python
+# From a Python script:
+from src.utils.history_visualizer import visualize_run
+
+# Display conversation in terminal with rich formatting
+visualize_run("automl_run_20250422_212715_4bd7549d")  # Replace with your run ID
+
+# Specify a particular agent (e.g., data_analysis_agent instead of the default "swarm")
+visualize_run("automl_run_20250422_212715_4bd7549d", agent_name="data_analysis_agent")
+
+# Include token usage metadata
+visualize_run("automl_run_20250422_212715_4bd7549d", show_metadata=True)
+```
+
+### Programmatic Usage
+
+```python
+from src.utils.history_visualizer import (
+    RunHistoryVisualizer, get_run_conversation_html, get_run_agent_list
+)
+
+# Get available agents in a run
+agents = get_run_agent_list("automl_run_20250422_212715_4bd7549d")
+print(f"Available agents: {agents}")
+
+# Get HTML-formatted conversation for embedding in a web page
+html = get_run_conversation_html("automl_run_20250422_212715_4bd7549d")
+
+# Create a visualizer instance for more control
+visualizer = RunHistoryVisualizer("automl_run_20250422_212715_4bd7549d")
+run_summary = visualizer.get_run_summary()
+print(f"Run duration: {run_summary['duration']} seconds")
+```
+
 ## Extending the Application
 
 ### Adding New Agents

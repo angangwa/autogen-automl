@@ -108,7 +108,17 @@ def read_file_content(file_path: str) -> Optional[str]:
         Optional[str]: The content of the file, or None if an error occurred.
     """
     try:
-        with open(file_path, 'r') as f:
+        # Use utf-8 encoding. If it fails, try cp1252.
+        # This is a common encoding for Windows files.
+        encoding = 'utf-8'
+        try:
+            with open(file_path, 'r', encoding=encoding) as f:
+                return f.read()
+        except UnicodeDecodeError:
+            encoding = 'cp1252'
+            logger.warning(f"Failed to decode {file_path} with utf-8, trying cp1252.")
+    
+        with open(file_path, 'r', encoding=encoding) as f:
             return f.read()
     except Exception as e:
         logger.error(f"Failed to read file {file_path}: {e}")

@@ -9,4 +9,5 @@ pandas
 matplotlib
 plotly
 kaleido
-
+watchdog
+rich # for custom console output
