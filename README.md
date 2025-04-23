@@ -37,7 +37,7 @@ autogen-automl/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/autogen-automl.git](https://github.com/angangwa/autogen-automl
+   git clone [https://github.com/angangwa/autogen-automl](https://github.com/angangwa/autogen-automl.git)
    cd autogen-automl
    ```
 
@@ -54,10 +54,10 @@ autogen-automl/
 
 4. Install the package with UV:
    ```bash
-   uv pip install -e .
+   uv pip install -r requirements.txt
    ```
 
-5. Create a `.env` file with your configuration:
+5. Create a `.env` file with your configuration (see example env file and `src/config/settings.py` for available settings):
    ```
    ANTHROPIC_API_KEY=your_api_key_here
    ```
@@ -170,46 +170,12 @@ print(f"Run duration: {run_summary['duration']} seconds")
 1. Create a new tool function in `src/tools/`
 2. Wrap it with `FunctionTool` and add to the appropriate agent
 
-## Dependency Management
-
-### Adding New Dependencies
-
-To add new dependencies:
-
-```bash
-uv pip add package_name
-```
-
-### Updating Dependencies
-
-To update all dependencies to their latest versions:
-
-```bash
-uv pip install -e . --upgrade
-```
-
-### Recording Exact Versions
-
-To record exact versions for reproducibility:
-
-```bash
-uv pip freeze > requirements.lock
-```
-
-### Installing from Lock File
-
-To install exact versions on another machine:
-
-```bash
-uv pip install -r requirements.lock
-```
-
 ## Requirements
 
-- Python 3.8+
+- Python 3.11+
 - Docker
-- Anthropic API key
-- UV for dependency management
+- Anthropic/Azure/OpenAI/Gemini API key
+- UV or venv for dependency management
 
 ## License
 
