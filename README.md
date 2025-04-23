@@ -37,7 +37,7 @@ autogen-automl/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/autogen-automl.git
+   git clone https://github.com/yourusername/autogen-automl.git](https://github.com/angangwa/autogen-automl
    cd autogen-automl
    ```
 
