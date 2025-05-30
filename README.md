@@ -1,6 +1,6 @@
 # AutoGen AutoML: AI-Powered Exploratory Data Analysis
 
-AutoGen AutoML is a production-ready application that leverages AI agents to perform exploratory data analysis based on machine learning intent and dataset. It uses the AutoGen framework and Anthropic's Claude to analyze data, generate visualizations, and create comprehensive reports.
+AutoGen AutoML is a production-ready application that leverages AI agents to perform exploratory data analysis based on machine learning intent and dataset. It uses the AutoGen framework to analyze data, generate visualizations, and create comprehensive reports.
 
 ## Features
 
@@ -58,9 +58,6 @@ autogen-automl/
    ```
 
 5. Create a `.env` file with your configuration (see example env file and `src/config/settings.py` for available settings):
-   ```
-   ANTHROPIC_API_KEY=your_api_key_here
-   ```
 
 ## Running the Application
 
@@ -174,7 +171,7 @@ print(f"Run duration: {run_summary['duration']} seconds")
 
 - Python 3.11+
 - Docker
-- Anthropic/Azure/OpenAI/Gemini API key
+- Azure/OpenAI/Gemini/Anthropic API key
 - UV or venv for dependency management
 
 ## License
